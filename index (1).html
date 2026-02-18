@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portal de Insumos | Sousa Andrade</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
+    <style>
+        :root {
+            /* Nova Paleta de Cores */
+            --brand-blue: #004a99;    /* Azul Corporativo */
+            --brand-red: #e30613;     /* Vermelho de Destaque */
+            --brand-dark: #1a1a1a;    /* Preto Grafite */
+            --brand-light: #f8f9fa;   /* Branco Acinzentado (Fundo) */
+            --white: #ffffff;
+            --text-main: #2d2d2d;
+        }
+
+        body {
+            font-family: 'Montserrat', 'Segoe UI', sans-serif;
+            background-color: var(--brand-light);
+            color: var(--text-main);
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        /* Header Modernizado */
+        .header {
+            width: 100%;
+            background: var(--brand-dark);
+            padding: 25px 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            margin-bottom: 40px;
+            border-bottom: 5px solid var(--brand-blue);
+        }
+
+        .logo {
+            max-width: 220px;
+            height: auto;
+            margin-bottom: 10px;
+            filter: brightness(0) invert(1); /* Torna a logo branca se for escura */
+        }
+
+        .header h1 {
+            font-size: 0.9rem;
+            margin: 0;
+            color: var(--white);
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            font-weight: 300;
+        }
+
+        /* Container Principal */
+        .container {
+            width: 95%;
+            max-width: 500px;
+            background: var(--white);
+            padding: 40px;
+            border-radius: 8px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+            margin-bottom: 50px;
+            border-left: 6px solid var(--brand-red);
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 700;
+            font-size: 0.75rem;
+            color: var(--brand-blue);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        select, input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #edf0f5;
+            border-radius: 5px;
+            font-size: 15px;
+            color: var(--brand-dark);
+            background-color: var(--white);
+            transition: all 0.3s ease;
+            box-sizing: border-box;
+            outline: none;
+        }
+
+        select:focus, input:focus {
+            border-color: var(--brand-blue);
+        }
+
+        /* Resultados */
+        .search-section {
+            margin-top: 30px;
+            padding-top: 25px;
+            border-top: 2px solid #f0f0f0;
+            display: none;
+            animation: fadeIn 0.4s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .results-list {
+            list-style: none;
+            padding: 0;
+            margin-top: 15px;
+            max-height: 300px;
+            overflow-y: auto;
+            border: 1px solid #eee;
+            border-radius: 4px;
+        }
+
+        .result-item {
+            padding: 12px 15px;
+            border-bottom: 1px solid #f0f0f0;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+
+        .result-item:hover {
+            background-color: #f0f7ff; /* Azul bem clarinho no hover */
+            color: var(--brand-blue);
+            font-weight: 600;
+        }
+
+        /* Botão Reset */
+        .btn-reset {
+            width: 100%;
+            padding: 15px;
+            background: var(--brand-red);
+            border: none;
+            color: var(--white);
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            cursor: pointer;
+            margin-top: 25px;
+            border-radius: 5px;
+            transition: filter 0.3s, transform 0.1s;
+        }
+
+        .btn-reset:hover {
+            filter: brightness(1.2);
+        }
+
+        .btn-reset:active {
+            transform: scale(0.98);
+        }
+
+        .footer-info {
+            text-align: center;
+            font-size: 0.7rem;
+            color: #777;
+            margin-top: 20px;
+            font-weight: 600;
+        }
+
+        /* Scrollbar */
+        .results-list::-webkit-scrollbar { width: 6px; }
+        .results-list::-webkit-scrollbar-thumb { background: var(--brand-blue); border-radius: 10px; }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <header class="header">
+        <img src="https://sousaandrade.com.br/wp-content/themes/sousa-andrade/assets/images/logo-header.png" alt="Sousa Andrade" class="logo">
+        <h1>Gestão de Insumos</h1>
+    </header>
+
+    <div class="container">
+        <div class="form-group">
+            <label>Empresa</label>
+            <select id="sel-empresa" onchange="aoMudarEmpresa()">
+                <option value="">Carregando...</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>Obra</label>
+            <select id="sel-obra" onchange="aoMudarObra()" disabled>
+                <option value="">Selecione a empresa</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>Serviço</label>
+            <select id="sel-servico" onchange="aoMudarServico()" disabled>
+                <option value="">Selecione a obra</option>
+            </select>
+        </div>
+
+        <div id="area-busca" class="search-section">
+            <label style="color: var(--brand-red);">Localizar Insumo</label>
+            <input type="text" id="campo-busca" placeholder="O que você está procurando?" onkeyup="filtrarLista()">
+            <ul id="lista-resultados" class="results-list"></ul>
+        </div>
+
+        <button class="btn-reset" onclick="resetarTudo()">Limpar Filtros</button>
+        <div class="footer-info">SOUSA ANDRADE | DEPARTAMENTO DE SUPRIMENTOS</div>
+    </div>
+
+    <script>
+        // O Script permanece o mesmo, garantindo a funcionalidade original
+        const URL_CSV = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQeWoUzGEPCsqfLGQwpwe80rWBZomnX7gEZ4gH-73GbNzKA5UussFtVCJ-POS2fY5gIIYHiO7F1D6uq/pub?gid=0&single=true&output=csv';
+        
+        let dadosCompletos = [];
+        let insumosFiltrados = [];
+
+        window.onload = carregarDados;
+
+        function carregarDados() {
+            Papa.parse(URL_CSV, {
+                download: true,
+                header: true,
+                skipEmptyLines: true,
+                complete: (res) => {
+                    dadosCompletos = res.data.map(item => {
+                        let novoItem = {};
+                        for (let key in item) {
+                            let chaveLimpa = key.toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+                            novoItem[chaveLimpa] = item[key];
+                        }
+                        return novoItem;
+                    });
+                    popularEmpresas();
+                }
+            });
+        }
+
+        function popularEmpresas() {
+            const sel = document.getElementById('sel-empresa');
+            const empresas = [...new Set(dadosCompletos.map(i => i.EMPRESA))].filter(e => e).sort();
+            sel.innerHTML = '<option value="">-- Selecione a Empresa --</option>';
+            empresas.forEach(e => sel.add(new Option(e, e)));
+        }
+
+        function aoMudarEmpresa() {
+            const emp = document.getElementById('sel-empresa').value;
+            const selObra = document.getElementById('sel-obra');
+            const selServ = document.getElementById('sel-servico');
+            document.getElementById('area-busca').style.display = 'none';
+            selServ.disabled = true;
+            selServ.innerHTML = '<option value="">Selecione a obra</option>';
+            if (!emp) { selObra.disabled = true; return; }
+            const obras = [...new Set(dadosCompletos.filter(i => i.EMPRESA === emp).map(i => i.OBRA))].filter(o => o).sort();
+            selObra.innerHTML = '<option value="">-- Selecione a Obra --</option>';
+            obras.forEach(o => selObra.add(new Option(o, o)));
+            selObra.disabled = false;
+        }
+
+        function aoMudarObra() {
+            const emp = document.getElementById('sel-empresa').value;
+            const obr = document.getElementById('sel-obra').value;
+            const selServ = document.getElementById('sel-servico');
+            document.getElementById('area-busca').style.display = 'none';
+            if (!obr) { selServ.disabled = true; return; }
+            const servicos = [...new Set(dadosCompletos.filter(i => i.EMPRESA === emp && i.OBRA === obr).map(i => i.SERVICO))].filter(s => s).sort();
+            selServ.innerHTML = '<option value="">-- Selecione o Serviço --</option>';
+            servicos.forEach(s => selServ.add(new Option(s, s)));
+            selServ.disabled = false;
+        }
+
+        function aoMudarServico() {
+            const emp = document.getElementById('sel-empresa').value;
+            const obr = document.getElementById('sel-obra').value;
+            const ser = document.getElementById('sel-servico').value;
+            const areaBusca = document.getElementById('area-busca');
+            if (!ser) { areaBusca.style.display = 'none'; return; }
+            insumosFiltrados = dadosCompletos
+                .filter(i => i.EMPRESA === emp && i.OBRA === obr && i.SERVICO === ser)
+                .map(i => i.INSUMO).filter(ins => ins).sort();
+            areaBusca.style.display = 'block';
+            document.getElementById('campo-busca').value = '';
+            renderizarLista(insumosFiltrados);
+        }
+
+        function renderizarLista(lista) {
+            const ul = document.getElementById('lista-resultados');
+            ul.innerHTML = lista.length ? lista.map(i => `<li class="result-item">${i}</li>`).join('') : '<li class="result-item" style="color:#999">Nenhum insumo encontrado.</li>';
+        }
+
+        function filtrarLista() {
+            const termo = document.getElementById('campo-busca').value.toLowerCase();
+            renderizarLista(insumosFiltrados.filter(i => i.toLowerCase().includes(termo)));
+        }
+
+        function resetarTudo() {
+            document.getElementById('sel-empresa').value = '';
+            aoMudarEmpresa();
+        }
+    </script>
+</body>
+</html>
